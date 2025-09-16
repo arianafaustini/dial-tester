@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotional Response Dial Tester</title>
+    <!-- Added Supabase environment variables as meta tags for JavaScript access -->
+    <meta name="supabase-url" content="https://your-project.supabase.co">
+    <meta name="supabase-anon-key" content="your-anon-key">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <h1>Emotional Response Dial Tester</h1>
+            <div class="session-info">
+                <span id="session-timer">00:00</span>
+                <button id="change-user-btn" class="control-btn secondary">Change user</button>
+                <!-- Added sync button for cloud data sync -->
+                <button id="sync-btn" class="control-btn secondary">Sync Data</button>
+                <button id="export-btn" class="export-btn">Export Data</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Instructions -->
+            <div class="instructions">
+                <h2>Instructions</h2>
+                <p>Use the dial below to provide real-time emotional feedback as you watch or listen to content. Move the dial to express your emotional response:</p>
+                <ul>
+                    <li><strong>Left (Red):</strong> Negative emotions (dislike, anger, sadness)</li>
+                    <li><strong>Center (Yellow):</strong> Neutral response</li>
+                    <li><strong>Right (Green):</strong> Positive emotions (like, joy, excitement)</li>
+                </ul>
+            </div>
+
+            <!-- Dial Interface -->
+            <div class="dial-container">
+                <div class="dial-wrapper">
+                    <div class="dial-track">
+                        <div class="dial-thumb" id="dial-thumb">
+                            <div class="thumb-indicator"></div>
+                        </div>
+                        <div class="dial-labels">
+                            <span class="label negative">Negative</span>
+                            <span class="label neutral">Neutral</span>
+                            <span class="label positive">Positive</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Current Value Display -->
+                <div class="value-display">
+                    <div class="current-value">
+                        <span id="current-value">0</span>
+                        <span class="value-label">Emotional Response</span>
+                    </div>
+                    <div class="intensity-bar">
+                        <div class="intensity-fill" id="intensity-fill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <button id="start-btn" class="control-btn primary">Start Session</button>
+                <button id="pause-btn" class="control-btn secondary" disabled>Pause</button>
+                <button id="reset-btn" class="control-btn secondary">Reset</button>
+            </div>
+
+            <!-- Real-time Chart -->
+            <div class="chart-container">
+                <h3>Real-time Response</h3>
+                <canvas id="response-chart" width="400" height="200"></canvas>
+            </div>
+
+            <!-- Data Summary -->
+            <div class="data-summary">
+                <h3>Session Summary</h3>
+                <div class="summary-stats">
+                    <div class="stat">
+                        <span class="stat-value" id="avg-response">0</span>
+                        <span class="stat-label">Average Response</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="max-response">0</span>
+                        <span class="stat-label">Peak Positive</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="min-response">0</span>
+                        <span class="stat-label">Peak Negative</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value" id="data-points">0</span>
+                        <span class="stat-label">Data Points</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

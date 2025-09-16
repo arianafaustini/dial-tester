@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Migration Tool - Emotional Dial Tester</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .migration-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .migration-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .migration-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status-card {
+            background: #f7fafc;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .status-card.success {
+            border-left-color: #48bb78;
+            background: #f0fff4;
+        }
+        
+        .status-card.error {
+            border-left-color: #e53e3e;
+            background: #fff5f5;
+        }
+        
+        .status-card.warning {
+            border-left-color: #f6ad55;
+            background: #fffaf0;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            margin: 5px;
+        }
+        
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #3182ce;
+        }
+        
+        .btn-primary:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+        
+        .btn-secondary:hover {
+            background: #cbd5e0;
+        }
+        
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #38a169;
+        }
+        
+        .btn-danger {
+            background: #e53e3e;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #c53030;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e2e8f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4299e1, #48bb78);
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        
+        .data-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .summary-item {
+            text-align: center;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+        }
+        
+        .summary-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2d3748;
+        }
+        
+        .summary-label {
+            color: #4a5568;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .log-container {
+            background: #1a202c;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 15px 0;
+        }
+        
+        .log-entry {
+            margin: 2px 0;
+            padding: 2px 0;
+        }
+        
+        .log-entry.success {
+            color: #68d391;
+        }
+        
+        .log-entry.error {
+            color: #fc8181;
+        }
+        
+        .log-entry.warning {
+            color: #f6ad55;
+        }
+        
+        .log-entry.info {
+            color: #63b3ed;
+        }
+    </style>
+</head>
+<body>
+    <div class="migration-container">
+        <div class="migration-header">
+            <h1>Data Migration Tool</h1>
+            <p>Migrate your localStorage data to Supabase database</p>
+        </div>
+
+        <!-- Database Connection Status -->
+        <div class="migration-section">
+            <h2>Database Connection</h2>
+            <div id="connection-status" class="status-card">
+                <strong>Status:</strong> Checking connection...
+            </div>
+            <button id="test-connection-btn" class="btn btn-secondary" onclick="testConnection()">
+                Test Connection
+            </button>
+        </div>
+
+        <!-- Local Data Analysis -->
+        <div class="migration-section">
+            <h2>Local Data Analysis</h2>
+            <div id="local-data-status" class="status-card">
+                <strong>Status:</strong> Analyzing local storage...
+            </div>
+            
+            <div id="local-data-summary" class="data-summary" style="display: none;">
+                <div class="summary-item">
+                    <div class="summary-value" id="local-users-count">0</div>
+                    <div class="summary-label">Users</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value" id="local-sessions-count">0</div>
+                    <div class="summary-label">Sessions</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value" id="local-datapoints-count">0</div>
+                    <div class="summary-label">Data Points</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value" id="local-size">0 KB</div>
+                    <div class="summary-label">Storage Size</div>
+                </div>
+            </div>
+            
+            <button id="analyze-data-btn" class="btn btn-secondary" onclick="analyzeLocalData()">
+                Analyze Local Data
+            </button>
+            <button id="export-backup-btn" class="btn btn-secondary" onclick="exportBackup()" style="display: none;">
+                Export Backup
+            </button>
+        </div>
+
+        <!-- Migration Process -->
+        <div class="migration-section">
+            <h2>Migration Process</h2>
+            <div id="migration-status" class="status-card">
+                <strong>Status:</strong> Ready to migrate
+            </div>
+            
+            <div id="migration-progress" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div id="progress-text">0% Complete</div>
+            </div>
+            
+            <div class="log-container" id="migration-log" style="display: none;">
+                <!-- Migration logs will appear here -->
+            </div>
+            
+            <div style="margin-top: 20px;">
+                <button id="start-migration-btn" class="btn btn-primary" onclick="startMigration()" disabled>
+                    Start Migration
+                </button>
+                <button id="clear-local-btn" class="btn btn-danger" onclick="clearLocalData()" style="display: none;">
+                    Clear Local Data
+                </button>
+                <button id="verify-migration-btn" class="btn btn-success" onclick="verifyMigration()" style="display: none;">
+                    Verify Migration
+                </button>
+            </div>
+        </div>
+
+        <!-- Database Data Summary -->
+        <div class="migration-section">
+            <h2>Database Data Summary</h2>
+            <div id="database-data-summary" class="data-summary">
+                <div class="summary-item">
+                    <div class="summary-value" id="db-sessions-count">-</div>
+                    <div class="summary-label">Sessions</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value" id="db-datapoints-count">-</div>
+                    <div class="summary-label">Data Points</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value" id="db-users-count">-</div>
+                    <div class="summary-label">Unique Users</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value" id="db-last-updated">-</div>
+                    <div class="summary-label">Last Updated</div>
+                </div>
+            </div>
+            
+            <button id="refresh-db-stats-btn" class="btn btn-secondary" onclick="loadDatabaseStats()">
+                Refresh Stats
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let supabase = null;
+        let localData = null;
+        let migrationInProgress = false;
+
+        function initializeSupabase() {
+            try {
+                const supabaseUrl = window.NEXT_PUBLIC_SUPABASE_URL || 'YOUR_SUPABASE_URL';
+                const supabaseKey = window.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY';
+                
+                if (supabaseUrl === 'YOUR_SUPABASE_URL' || supabaseKey === 'YOUR_SUPABASE_ANON_KEY') {
+                    throw new Error('Supabase credentials not configured');
+                }
+                
+                supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+                return true;
+            } catch (error) {
+                console.error('Failed to initialize Supabase:', error);
+                return false;
+            }
+        }
+
+        async function testConnection() {
+            const statusEl = document.getElementById('connection-status');
+            const btnEl = document.getElementById('test-connection-btn');
+            
+            btnEl.disabled = true;
+            btnEl.textContent = 'Testing...';
+            
+            if (!supabase) {
+                statusEl.className = 'status-card error';
+                statusEl.innerHTML = '<strong>Status:</strong> Failed - Supabase not initialized';
+                btnEl.disabled = false;
+                btnEl.textContent = 'Test Connection';
+                return false;
+            }
+            
+            try {
+                const { data, error } = await supabase.from('sessions').select('count').limit(1);
+                
+                if (error) {
+                    throw error;
+                }
+                
+                statusEl.className = 'status-card success';
+                statusEl.innerHTML = '<strong>Status:</strong> Connected successfully to Supabase database';
+                
+                // Enable migration button if local data is available
+                if (localData) {
+                    document.getElementById('start-migration-btn').disabled = false;
+                }
+                
+                // Load database stats
+                await loadDatabaseStats();
+                
+                btnEl.textContent = 'Test Connection';
+                btnEl.disabled = false;
+                return true;
+            } catch (error) {
+                statusEl.className = 'status-card error';
+                statusEl.innerHTML = `<strong>Status:</strong> Connection failed - ${error.message}`;
+                btnEl.textContent = 'Test Connection';
+                btnEl.disabled = false;
+                return false;
+            }
+        }
+
+        function analyzeLocalData() {
+            const statusEl = document.getElementById('local-data-status');
+            const summaryEl = document.getElementById('local-data-summary');
+            const btnEl = document.getElementById('analyze-data-btn');
+            const exportBtn = document.getElementById('export-backup-btn');
+            
+            btnEl.disabled = true;
+            btnEl.textContent = 'Analyzing...';
+            
+            try {
+                // Get data from localStorage
+                const users = JSON.parse(localStorage.getItem('edt:users') || '[]');
+                const sessions = JSON.parse(localStorage.getItem('edt:sessions') || '[]');
+                
+                // Calculate total data points
+                const totalDataPoints = sessions.reduce((sum, session) => {
+                    return sum + (session.dataPoints ? session.dataPoints.length : 0);
+                }, 0);
+                
+                // Calculate storage size
+                const storageSize = new Blob([
+                    localStorage.getItem('edt:users') || '',
+                    localStorage.getItem('edt:sessions') || ''
+                ]).size;
+                
+                localData = {
+                    users,
+                    sessions,
+                    totalDataPoints,
+                    storageSize
+                };
+                
+                // Update summary
+                document.getElementById('local-users-count').textContent = users.length;
+                document.getElementById('local-sessions-count').textContent = sessions.length;
+                document.getElementById('local-datapoints-count').textContent = totalDataPoints;
+                document.getElementById('local-size').textContent = `${(storageSize / 1024).toFixed(1)} KB`;
+                
+                if (users.length === 0 && sessions.length === 0) {
+                    statusEl.className = 'status-card warning';
+                    statusEl.innerHTML = '<strong>Status:</strong> No local data found to migrate';
+                } else {
+                    statusEl.className = 'status-card success';
+                    statusEl.innerHTML = `<strong>Status:</strong> Found ${sessions.length} sessions from ${users.length} users with ${totalDataPoints} data points`;
+                    exportBtn.style.display = 'inline-block';
+                    
+                    // Enable migration if database is connected
+                    if (supabase) {
+                        document.getElementById('start-migration-btn').disabled = false;
+                    }
+                }
+                
+                summaryEl.style.display = 'grid';
+                
+            } catch (error) {
+                statusEl.className = 'status-card error';
+                statusEl.innerHTML = `<strong>Status:</strong> Error analyzing data - ${error.message}`;
+            }
+            
+            btnEl.disabled = false;
+            btnEl.textContent = 'Analyze Local Data';
+        }
+
+        function exportBackup() {
+            if (!localData) {
+                alert('Please analyze local data first');
+                return;
+            }
+            
+            const backupData = {
+                exportedAt: new Date().toISOString(),
+                version: '1.0',
+                users: localData.users,
+                sessions: localData.sessions,
+                metadata: {
+                    totalUsers: localData.users.length,
+                    totalSessions: localData.sessions.length,
+                    totalDataPoints: localData.totalDataPoints,
+                    storageSize: localData.storageSize
+                }
+            };
+            
+            const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `emotional-dial-backup-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            addLog('Backup exported successfully', 'success');
+        }
+
+        async function startMigration() {
+            if (!supabase || !localData || migrationInProgress) {
+                return;
+            }
+            
+            migrationInProgress = true;
+            const statusEl = document.getElementById('migration-status');
+            const progressEl = document.getElementById('migration-progress');
+            const logEl = document.getElementById('migration-log');
+            const startBtn = document.getElementById('start-migration-btn');
+            const verifyBtn = document.getElementById('verify-migration-btn');
+            const clearBtn = document.getElementById('clear-local-btn');
+            
+            startBtn.disabled = true;
+            progressEl.style.display = 'block';
+            logEl.style.display = 'block';
+            logEl.innerHTML = '';
+            
+            statusEl.className = 'status-card';
+            statusEl.innerHTML = '<strong>Status:</strong> Migration in progress...';
+            
+            try {
+                const totalSessions = localData.sessions.length;
+                let migratedSessions = 0;
+                let migratedDataPoints = 0;
+                let errors = 0;
+                
+                addLog('Starting migration process...', 'info');
+                addLog(`Found ${totalSessions} sessions to migrate`, 'info');
+                
+                for (const session of localData.sessions) {
+                    try {
+                        // Convert localStorage session format to database format
+                        const startTime = new Date(session.startTime).toISOString();
+                        const endTime = session.endTime ? new Date(session.endTime).toISOString() : null;
+                        const dataPoints = session.dataPoints || [];
+                        
+                        addLog(`Migrating session for ${session.userEmail}...`, 'info');
+                        
+                        // Insert session
+                        const { data: sessionData, error: sessionError } = await supabase
+                            .from('sessions')
+                            .insert({
+                                email: session.userEmail,
+                                start_time: startTime,
+                                end_time: endTime
+                            })
+                            .select()
+                            .single();
+                        
+                        if (sessionError) {
+                            throw sessionError;
+                        }
+                        
+                        // Insert data points
+                        if (dataPoints.length > 0) {
+                            const dbDataPoints = dataPoints.map(dp => ({
+                                session_id: sessionData.id,
+                                timestamp: new Date(session.sessionStartTime ? session.sessionStartTime + dp.timestamp : dp.time).toISOString(),
+                                value: dp.value
+                            }));
+                            
+                            const { error: dataPointsError } = await supabase
+                                .from('data_points')
+                                .insert(dbDataPoints);
+                            
+                            if (dataPointsError) {
+                                throw dataPointsError;
+                            }
+                            
+                            migratedDataPoints += dataPoints.length;
+                        }
+                        
+                        migratedSessions++;
+                        addLog(`✓ Migrated session with ${dataPoints.length} data points`, 'success');
+                        
+                        // Update progress
+                        const progress = (migratedSessions / totalSessions) * 100;
+                        updateProgress(progress);
+                        
+                        // Small delay to prevent overwhelming the database
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        
+                    } catch (error) {
+                        errors++;
+                        addLog(`✗ Error migrating session: ${error.message}`, 'error');
+                    }
+                }
+                
+                // Migration complete
+                if (errors === 0) {
+                    statusEl.className = 'status-card success';
+                    statusEl.innerHTML = `<strong>Status:</strong> Migration completed successfully! Migrated ${migratedSessions} sessions with ${migratedDataPoints} data points`;
+                    addLog(`Migration completed successfully!`, 'success');
+                    addLog(`Total: ${migratedSessions} sessions, ${migratedDataPoints} data points`, 'success');
+                } else {
+                    statusEl.className = 'status-card warning';
+                    statusEl.innerHTML = `<strong>Status:</strong> Migration completed with ${errors} errors. ${migratedSessions} sessions migrated successfully`;
+                    addLog(`Migration completed with ${errors} errors`, 'warning');
+                }
+                
+                verifyBtn.style.display = 'inline-block';
+                clearBtn.style.display = 'inline-block';
+                
+                // Refresh database stats
+                await loadDatabaseStats();
+                
+            } catch (error) {
+                statusEl.className = 'status-card error';
+                statusEl.innerHTML = `<strong>Status:</strong> Migration failed - ${error.message}`;
+                addLog(`Migration failed: ${error.message}`, 'error');
+            }
+            
+            migrationInProgress = false;
+            startBtn.disabled = false;
+        }
+
+        async function verifyMigration() {
+            if (!supabase || !localData) {
+                return;
+            }
+            
+            addLog('Starting migration verification...', 'info');
+            
+            try {
+                // Count sessions in database
+                const { data: sessions, error: sessionsError } = await supabase
+                    .from('sessions')
+                    .select('id, email');
+                
+                if (sessionsError) throw sessionsError;
+                
+                // Count data points in database
+                const { data: dataPoints, error: dataPointsError } = await supabase
+                    .from('data_points')
+                    .select('id');
+                
+                if (dataPointsError) throw dataPointsError;
+                
+                const dbSessionCount = sessions.length;
+                const dbDataPointCount = dataPoints.length;
+                const localSessionCount = localData.sessions.length;
+                const localDataPointCount = localData.totalDataPoints;
+                
+                addLog(`Database: ${dbSessionCount} sessions, ${dbDataPointCount} data points`, 'info');
+                addLog(`Local: ${localSessionCount} sessions, ${localDataPointCount} data points`, 'info');
+                
+                if (dbSessionCount >= localSessionCount && dbDataPointCount >= localDataPointCount) {
+                    addLog('✓ Verification successful - all data appears to be migrated', 'success');
+                } else {
+                    addLog('⚠ Verification warning - some data may be missing', 'warning');
+                }
+                
+            } catch (error) {
+                addLog(`Verification failed: ${error.message}`, 'error');
+            }
+        }
+
+        async function clearLocalData() {
+            if (!confirm('Are you sure you want to clear all local data? This cannot be undone. Make sure you have verified the migration first.')) {
+                return;
+            }
+            
+            try {
+                localStorage.removeItem('edt:users');
+                localStorage.removeItem('edt:sessions');
+                localStorage.removeItem('edt:synced-data');
+                localStorage.removeItem('edt:lastSyncTime');
+                
+                addLog('Local data cleared successfully', 'success');
+                
+                // Re-analyze to show empty state
+                analyzeLocalData();
+                
+            } catch (error) {
+                addLog(`Error clearing local data: ${error.message}`, 'error');
+            }
+        }
+
+        async function loadDatabaseStats() {
+            if (!supabase) return;
+            
+            try {
+                // Get session count and unique users
+                const { data: sessions, error: sessionsError } = await supabase
+                    .from('sessions')
+                    .select('email, created_at');
+                
+                if (sessionsError) throw sessionsError;
+                
+                // Get data points count
+                const { data: dataPoints, error: dataPointsError } = await supabase
+                    .from('data_points')
+                    .select('id');
+                
+                if (dataPointsError) throw dataPointsError;
+                
+                const uniqueUsers = new Set(sessions.map(s => s.email)).size;
+                const lastUpdated = sessions.length > 0 
+                    ? new Date(Math.max(...sessions.map(s => new Date(s.created_at)))).toLocaleDateString()
+                    : 'Never';
+                
+                document.getElementById('db-sessions-count').textContent = sessions.length;
+                document.getElementById('db-datapoints-count').textContent = dataPoints.length;
+                document.getElementById('db-users-count').textContent = uniqueUsers;
+                document.getElementById('db-last-updated').textContent = lastUpdated;
+                
+            } catch (error) {
+                console.error('Error loading database stats:', error);
+                document.getElementById('db-sessions-count').textContent = 'Error';
+                document.getElementById('db-datapoints-count').textContent = 'Error';
+                document.getElementById('db-users-count').textContent = 'Error';
+                document.getElementById('db-last-updated').textContent = 'Error';
+            }
+        }
+
+        function updateProgress(percentage) {
+            const progressFill = document.getElementById('progress-fill');
+            const progressText = document.getElementById('progress-text');
+            
+            progressFill.style.width = `${percentage}%`;
+            progressText.textContent = `${Math.round(percentage)}% Complete`;
+        }
+
+        function addLog(message, type = 'info') {
+            const logEl = document.getElementById('migration-log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logEl.appendChild(entry);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const initialized = initializeSupabase();
+            
+            if (initialized) {
+                testConnection();
+            } else {
+                const statusEl = document.getElementById('connection-status');
+                statusEl.className = 'status-card error';
+                statusEl.innerHTML = '<strong>Status:</strong> Supabase configuration missing. Please check your environment variables.';
+            }
+            
+            analyzeLocalData();
+        });
+    </script>
+</body>
+</html>
