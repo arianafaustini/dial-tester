@@ -42,6 +42,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-touch-fullscreen" content="yes" />
         <link rel="manifest" href="/manifest.json" />
+        <link rel="icon" href="/favicon.ico" />
       </head>
       <body className="touch-manipulation">
         <Suspense fallback={<div>Loading...</div>}>
@@ -56,8 +57,13 @@ export default function RootLayout({
               console.log("[v0] SUPABASE_URL from env:", "${supabaseUrl}");
               console.log("[v0] SUPABASE_ANON_KEY from env:", "${supabaseAnonKey ? "***" + supabaseAnonKey.slice(-4) : "missing"}");
               
-              window.SUPABASE_URL = "${supabaseUrl}";
-              window.SUPABASE_ANON_KEY = "${supabaseAnonKey}";
+              if ("${supabaseUrl}" && "${supabaseAnonKey}") {
+                window.SUPABASE_URL = "${supabaseUrl}";
+                window.SUPABASE_ANON_KEY = "${supabaseAnonKey}";
+                console.log("[v0] Window variables set successfully");
+              } else {
+                console.error("[v0] Missing environment variables!");
+              }
               
               console.log("[v0] Window variables set:", {
                 url: window.SUPABASE_URL,
