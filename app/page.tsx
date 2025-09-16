@@ -211,6 +211,7 @@ export default function EmotionalDialTester() {
 
   return (
     <div className="min-h-screen bg-gray-900 p-4">
+      {/* Deployment trigger: 2025-01-16-force-rebuild */}
       <div className="max-w-md mx-auto space-y-6">
         <Card className="bg-black border-gray-800">
           <CardHeader className="text-center">
