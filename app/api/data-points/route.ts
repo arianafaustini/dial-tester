@@ -45,23 +45,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Formula: ((value + 100) / 200) * 9 + 1
-    // This maps -100 -> 1, 0 -> 5.5, +100 -> 10
-    const transformedValue = Math.round(((numericValue + 100) / 200) * 9 + 1)
-
-    console.log("[v0] Server: Value transformation:", {
-      originalValue: numericValue,
-      transformedValue,
-      withinDbRange: transformedValue >= 1 && transformedValue <= 10,
-    })
-
     const supabase = await createClient()
 
     const { data: dataPoint, error } = await supabase
       .from("data_points")
       .insert({
         session_id,
-        value: transformedValue, // Use transformed value that fits 1-10 constraint
+        value: numericValue, // Store original value (-100 to +100)
         timestamp: timestamp ? new Date(timestamp).toISOString() : new Date().toISOString(),
       })
       .select()
@@ -73,11 +63,17 @@ export async function POST(request: NextRequest) {
         code: error.code,
         details: error.details,
         hint: error.hint,
-        insertedValue: transformedValue,
+        insertedValue: numericValue,
         sessionId: session_id,
       })
       return NextResponse.json({ error: "Failed to save data point", details: error.message }, { status: 500 })
     }
+
+    console.log("[v0] Server: Successfully saved data point:", {
+      originalValue: numericValue,
+      storedValue: numericValue,
+      sessionId: session_id,
+    })
 
     return NextResponse.json({ dataPoint })
   } catch (error) {
