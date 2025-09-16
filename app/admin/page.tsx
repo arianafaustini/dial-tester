@@ -145,6 +145,20 @@ export default function AdminPage() {
             <button onClick={loadSessions} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
               Refresh Data
             </button>
+            <a
+              href="/admin/export"
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 inline-flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              Export Data
+            </a>
             <span className="px-3 py-1 rounded text-sm bg-green-900 text-green-300 border border-green-700">
               Source: Database API ✓
             </span>
